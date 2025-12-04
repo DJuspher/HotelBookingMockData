@@ -12,8 +12,22 @@ const Reservation = () => {
     amount: "",
   });
 
+  // Function to capitalize first letter of every word
+  const capitalizeWords = (str) => {
+    return str
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Auto-capitalize Full Name
+    if (name === "name") {
+      const formatted = capitalizeWords(value);
+      setForm({ ...form, name: formatted });
+      return;
+    }
 
     // Phone: allow only digits + 11 max
     if (name === "phone") {
@@ -24,6 +38,19 @@ const Reservation = () => {
     // Amount: digits only
     if (name === "amount") {
       if (!/^\d*$/.test(value)) return;
+    }
+
+    // Pax: only pure numbers 1–10, no special chars
+    if (name === "pax") {
+      if (!/^\d*$/.test(value)) return;
+
+      if (value === "") {
+        setForm({ ...form, pax: "" });
+        return;
+      }
+
+      const num = Number(value);
+      if (num < 1 || num > 10) return;
     }
 
     setForm({ ...form, [name]: value });
@@ -40,7 +67,6 @@ const Reservation = () => {
 
       console.log("Reservation saved:", reservationRes.data);
 
-      // Mock payment request
       const paymentRes = await axios.post(
         "http://localhost:5000/api/payment/create",
         {
@@ -51,8 +77,6 @@ const Reservation = () => {
       );
 
       console.log("Redirecting to:", paymentRes.data.invoice_url);
-
-      // Redirect to success page
       window.location.href = paymentRes.data.invoice_url;
 
     } catch (err) {
@@ -136,11 +160,11 @@ const Reservation = () => {
 
         {/* Pax */}
         <div>
-          <label className="block font-semibold">Number of Guests</label>
+          <label className="block font-semibold">Number of Guests </label>
           <input
             name="pax"
-            type="number"
-            min="1"
+            type="text"
+            placeholder="1"
             className="border w-full px-3 py-2 rounded"
             onChange={handleChange}
             value={form.pax}
